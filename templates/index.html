@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html>
+    <head>
+
+        <style>
+
+            body {
+                background-color: #e6e6ff;
+                text-align: center;
+            }
+
+            xmp {
+                display: inline;
+            }
+
+            #panel {
+                padding: 10px;
+                width: 95%;
+                border: 1px solid #6666ff;
+                background-color: #9999ff;
+                text-align: center;
+                display: inline-block;
+            }
+
+            #codetext {
+                width: 50%;
+            }
+
+            #inputtext {
+                width: 50%;
+            }
+
+            #cellnumber {
+                width: 25%;
+            }
+
+            #codetext, #inputtext, #cellnumber {
+                border: 2px solid #808080;
+                background-color: lightgray;
+                font-size: 14px;
+                border-radius: 0;
+                box-shadow: none;
+                margin-top: 10px;
+            }
+
+            #waittime {
+                -webkit-appearance: none;
+                appearance: none;
+                width: 50%;
+                height: 12px;
+                background: #b3c6ff;
+                margin-top: 5px;
+                display: block;
+                margin-left: auto;
+                margin-right: auto;
+            }
+
+            #waittime::-webkit-slider-thumb {
+                -webkit-appearance: none;
+                appearance: none;
+                width: 20px;
+                height: 20px;
+                border-radius: 7px;
+                background: #3366ff;
+                cursor: pointer;
+            }
+
+            #output {
+                border: 1px solid #47d147;
+                background-color: #c2f0c2;
+                color: #29a329;
+                height: 20px;
+                padding: 5px;
+                width: 50%;
+                margin-left: auto;
+                margin-right: auto;
+                overflow-x: scroll;
+                white-space: nowrap;
+            }
+
+            #tapeholder {
+                margin-left: auto;
+                margin-right: auto;
+                /*border: 2px solid gray;
+                background-color: lightgray;*/
+            }
+
+            .cell {
+                background-color: #bfbfbf;
+                display: inline-block;
+                width: 45px;
+                /*border: 2px solid gray;*/
+                padding-top: 15px;
+                padding-bottom: 15px;
+                text-align: center;
+                font-weight: bold;
+                font-family: Monaco;
+            }
+
+            .switch {
+                position: relative;
+                display: inline-block;
+                width: 44px;
+                height: 24px;
+                display: block;
+                margin-left: auto;
+                margin-right: auto;
+                margin-top: 5px;
+            }
+
+            .switch input {
+                opacity: 0;
+                width: 0;
+                height: 0;
+            }
+
+            .slider {
+                position: absolute;
+                cursor: pointer;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background-color: #ccc;
+                -webkit-transition: .4s;
+                transition: .4s;
+            }
+
+            .slider:before {
+                position: absolute;
+                content: "";
+                height: 16px;
+                width: 16px;
+                left: 4px;
+                bottom: 4px;
+                background-color: white;
+                -webkit-transition: .4s;
+                transition: .4s;
+            }
+
+            input:checked + .slider {
+                background-color: #2196f3;
+            }
+
+            input:focus + .slider {
+                box-shadow: 0 0 1px #2196f3;
+            }
+
+            input:checked + .slider:before {
+                -webkit-transform: translateX(20px);
+                -ms-transform: translateX(20px);
+                transform: translateX(20px);
+            }
+
+            #runbutton {
+                background-color: #70db70;
+            }
+
+            #abortbutton {
+                background-color: #ff8080;
+            }
+
+            #runbutton, #abortbutton {
+                border-radius: 0;
+                border: none;
+                padding-top: 8px;
+                padding-bottom: 8px;
+                padding-left: 12px;
+                padding-right: 12px;
+                text-decoration: none;
+                color: black;
+                font-size: 16px;
+                text-align: center;
+                margin-top: 10px;
+            }
+
+            #description {
+                padding: 20px;
+                text-align: left;
+            }
+
+        </style>
+
+    </head>
+
+    <body>
+
+        <h1>Brainfuck Interpreter</h1>
+
+        <div id="panel">
+
+                <div width="100%">
+                    <table id="tapeholder"><tr id="tape"></tr></table>
+                    <div id="output">Your code's output will appear here.</div>
+                </div>
+
+                <div>
+                    <textarea id="codetext" rows=6 placeholder="Your code here..."></textarea>
+                </div>
+
+                <div>
+                    <input type="text" id="inputtext" size=50 placeholder="Inputs here..."></input>
+                </div>
+
+                <div>
+                    <input type="number" id="cellnumber" placeholder="Specify number of cells..."></input>
+                </div>
+
+                <button id="runbutton" onclick="Machine.code_submitted()">RUN</button>
+                <button id="abortbutton" onclick="Machine.abort=1">ABORT</button>
+                
+                <div style="margin-top: 10px">
+                    <a>Step speed:</a>
+                    <input type="range" min='0' max='2000' value='1000' id="waittime"></input>
+                    <a>Hide steps?</a>
+                    <label class="switch"><input type="checkbox" id="showsteps"><span class="slider"></span></label>
+                    <a>ASCII mode?</a> 
+                    <label class="switch"><input type="checkbox" id="asciimode"><span class="slider"></span></label>
+                </div>
+
+        </div>
+
+        <div id="description">
+
+            <h2>What is Brainfuck?</h2>
+
+            <p>Brainfuck is an esoteric programming language, meaning that it's not very useful for any practical purposes, but it can be a great source of programming puzzles. It is an extremely minimalistic cellular automaton, and is meant to be similar to a <a href="https://en.wikipedia.org/wiki/Turing_machine">Turing Machine</a>. A brainfuck-executing machine consists only of a series of cells arranged linearly, each of which can store numerical values, and a pointer that can move between adjacent cells. This system can be programmed using combinations of only eight basic commands:</p>
+            <ul>
+                <li><xmp>+</xmp> increments the numerical value in the current cell.</li>
+                <li><xmp>-</xmp> decrements the numerical value in the current cell.</li>
+                <li><xmp>></xmp> moves the pointer to the right.</li>
+                <li><xmp><</xmp> moves the pointer to the left.</li>
+                <li><xmp>,</xmp> accepts input and stores it in the current cell.</li>
+                <li><xmp>.</xmp> outputs the value of the current cell.</li>
+                <li><xmp>[</xmp> and <xmp>]</xmp> are used to create loops. The code between two brackets is executed repeatedly until the currently selected cell contains a value of zero. More specifically, <xmp>[</xmp> translates to 'if the current cell is zero, skip ahead to the corresponding <xmp>]</xmp>, else proceed to next command' and <xmp>]</xmp> translates to 'if the current cell is zero, proceed to next command, else jump back to the corresponding <xmp>[</xmp>'.</li>
+            </ul>
+            <p>Surprisingly, this language is Turing-complete, meaning that it can be used to implement any computable function (including any functions that can be implemented in Javascript, Python, or other programming language). However, Brainfuck has also been called a 'Turing tar-pit,' because implementations of more complex programs are extremely cumbersome and complex. Even implementing simple programs can be challenging puzzles.</p>
+            <p>There are multiple different ways of implementing Brainfuck. This interpreter supports two different versions of Brainfuck: numerical mode and ASCII mode. In numerical mode (the default), input consists of a series of comma-separated numbers, and cells can store any arbitrarily large positive integer value (but cannot go below zero). In ASCII mode, any ASCII string will be accepted as input and the characters are translated into numbers and entered into cells one-by-one, and numerical output is also translated back into ASCII before being displayed. Additionally, since there are only 256 ASCII characters, ASCII mode uses "byte cells" that can only contain integers between 0 and 255. Attempting to decrement 0 will produce an error in numerical mode, but it will "wrap around" to 255 in ASCII mode.</p>
+            <p>Here are a couple more conventions that this interpreter uses:</p>
+            <ul>
+                <li>There are finitely many cells, and the number of cells must be specified before code is executed.</li>
+                <li>Attempting to move left from the leftmost cell or right from the rightmost cell results in an error.</li>
+                <li>The pointer starts on the leftmost cell.</li>
+                <li>If the program requests input and none is given, '0' is taken as the input.</li>
+            </ul>
+            <p>Also, be wary of running your Brainfuck code with 'hide steps' turned on. If your code enters an infinite loop, it could temporarily crash the intepreter.</ p>
+
+            <h2>What the heck am I supposed to do with this?</h2>
+
+            <p>Here are some simple, easy-to-deconstruct programs you can try in numerical mode:</p>
+            <ul>
+                <li><xmp>,.</xmp> echoes back your input. (1 cell)</li>
+                <li><xmp>,[-.]</xmp> counts down to zero starting from the input number. (1 cell)</li>
+                <li><xmp>,>,[-<+>]<.</xmp> adds two inputs. (2 cells)</li>
+                <li><xmp>,[->++<]>.</xmp> returns double the input. (2 cells)</li>
+            </ul>
+            <p>...and here are a few for ASCII mode:</p>
+            <ul>
+                <li><xmp>,[.,]</xmp> echoes back your input. (1 cell)</li>
+                <li><xmp>,[..,]</xmp> echoes every character of your input twice. (1 cell)</li>
+                <li><xmp>,[.,,] echoes every other character of your input. (1 cell)</xmp></li>
+                <li><xmp>,[.,]++++++[->+++++<]>+++.</xmp> adds an exclamation point to the end of your input. (2 cells)</li>
+            </ul>
+           
+            <p>Here are two more complicated examples. The code below (to be run in numerical mode with two cells) prints out the powers of two in increasing order until it either crashes or is aborted:</p>
+            <xmp>+[.[->++<]>[-<+>]<]</xmp>
+            <p>This code uses 13 cells in ASCII mode to print the text 'BRAINFUCK!'</p>
+            <xmp>>++++++++++[[>]+[<]>-]<+++++++++++[->+++<]>[>[++>]<-[<]>-]+++++[>>+++>>+>++>+>++++>>++<<<<<<<<<-]>>+>->++>++>->->+>->[-<]>[.>]</xmp>
+ 
+            <p>Want to try your hand at writing Brainfuck code? Here are four types of fun challenges you might want to try:</p>
+            <ul>
+                <li>
+                    Pick a simple function and try to implement it with the shortest code possible.
+                    <ul>
+                        <li>Return the number 365. Or pick a random number between 100 and 1000 and write a program with as few commands as possible that returns that number. (numerical)</li>
+                        <li>Print 'Hello World!' (ASCII)</li>
+                        <li>Write a function that takes arbitrarily many inputs and returns the maximum value from among them. (numerical)</li>
+                        <li>Given a string, remove all of the spaces from it and return the result. (ASCII)</li>
+                    </ul>
+                </li>
+                <li>
+                    Implement a simple function using only some small fixed number of cells.
+                    <ul>
+                        <li>Given a numerical input and using only three cells, count up to that input, returning all of the positive integers less than or equal to it. (numerical)</li>
+                        <li>Calculate the square of a number using only three cells. (numerical)</li>
+                        <li>Using four cells, create a function that accepts two numerical inputs and checks whether they are the same, returning 1 if they are equal and 0 otherwise. (numerical)</li>
+                    </ul>
+                </li>
+                <li>
+                    Build a function that isn't quite so simple - complex algorithms get ugly fast in Brainfuck.
+                    <ul>
+                        <li>Given a list of positive integers, return them in order from least to greatest. (numerical)</li>
+                        <li>Given a string of mixed uppercase and lowercase alphabetical characters as input, convert them all to uppercase. (ASCII)</li>
+                        <li>Return the binary digits of an input number. (numerical)</li>
+                        <li>Given two base-ten numbers separated by spaces, return their sum (in base ten). (ASCII)</li>
+                    </ul>
+                </li>
+                <li>
+                    Given some pre-written Brainfuck code, try to figure out what it does and understand how it works.
+                    <ul>
+                        <li><xmp>>,[>,]<[.<]</xmp>(ASCII, input string of upper/lowercase alphabetical characters, at least 11 cells)</li>
+                        <li><xmp>,+[[>+>+<<-]>>-[-<<+>>]<[->++<]>[-<+>]<<]>--[----<+>]<.</xmp>(numerical, one input, at least 3 cells)</li>
+                    </ul>
+                </li>
+            </ul>
+
+        </div>
+
+        <script src='/js'></script>
+
+    </body>
+</html>
